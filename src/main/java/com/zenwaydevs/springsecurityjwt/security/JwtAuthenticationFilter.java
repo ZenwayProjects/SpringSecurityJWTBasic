@@ -24,11 +24,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
     @Autowired
-    private JwtProvider jwtProvider;
+    private JwtGenerador jwtGenerador;
 
-    public String obtenerTokenDeSolicitud(HttpServletRequest request){
+    private String obtenerTokenDeSolicitud(HttpServletRequest request){
         String bearerToken = request.getHeader("Authorization");
-        if(StringUtils.hasText(bearerToken)&& bearerToken.startsWith("Bearer ")){
+        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")){
             return  bearerToken.substring(7, bearerToken.length());
         }
         return null;
@@ -39,8 +39,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String token = obtenerTokenDeSolicitud(request);
-        if (StringUtils.hasText(token) && jwtProvider.validarToken(token)){
-            String username = jwtProvider.obtenerUsernameDeJwt(token);
+        if (StringUtils.hasText(token) && jwtGenerador.validarToken(token)){
+            String username = jwtGenerador.obtenerUsernameDeJwt(token);
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
             List<String> userRoles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
             if (userRoles.contains("USER") || userRoles.contains("ADMIN")){
@@ -51,6 +51,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
-
     }
 }
